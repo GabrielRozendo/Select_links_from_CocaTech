@@ -17,11 +17,17 @@ Como nem sempre dá para acompanhar escutando os podcasts do Coca e as vezes tem
 
 ### Etapas
 1: ler os feed rss ✅
+
 2: ler a página e pegar os links ⚠️
+
 3: criar cosmos db ❌
+
 4: salvar esses dados no azure ❌
+
 5: exibir via angular ❌
+
 6: enviar via bot Telegram ❌
+
 
 ## Author
 * **Gabriel Oliveira Rozendo**
