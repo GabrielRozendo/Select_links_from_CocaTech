@@ -1,51 +1,35 @@
-import  feedparser
+import feedparser
 import time
+import json
 
-url='http://feeds.cocatech.com.br/cocatechpodcast'
+url = 'http://feeds.cocatech.com.br/cocatechpodcast'
 feed = feedparser.parse(url)
-#print(feed['feed']['title'])
 
-#
-# function to get the current time
-#
-current_time_millis = lambda: int(round(time.time() * 1000))
-current_timestamp = current_time_millis()
+class PostFeed(object):
+    def __init__(self, title, tags, link, data):
+        self.title = title
+        self.tags = tags
+        self.link = link
+        self.data = data
 
-posts_to_print = []
-posts_to_skip = []
-posts_apps = []
-posts_news = []
+
+posts = []
 
 for post in feed.entries:
-    title = post.title
-    tags = post.tags
-    if 'news' in tags:
-        posts_news.append(title)
-    elif 'apps' in tags:
-        posts_apps.append(title)
+    post_tags = []
+    for tag in post.tags:
+        post_tags.append(tag['term'])    
+    tags = ", ".join(post_tags)
+    postItem = PostFeed(post.title, tags, post.link, post.published)
+    posts.append(postItem)
     
-    link = post.link
-    data = post.published
-    #print(title)
-    #if post_is_in_db_with_old_timestamp(title):
-        #posts_to_skip.append(title)
-    #else:
-    posts_to_print.append(title)
+tagAnterior = ''
+for post in posts:
+    if tagAnterior != post.tags:
+        print('Tags diferentes!')
+        tagAnterior = post.tags
     
-print("------------NEWS---------------------\n")
-for post in posts_news:
-    print(post + "|" + str(current_timestamp) + "\n")
-    print("\n" + time.strftime("%a, %b %d %I:%M %p"))
+    print('Titulo: {}'.format(post.title))
+    print('Postado em: {} -- com as tags: {}'.format(post.data, post.tags))
+    print('Link: {}'.format(post.link))
     print("-----------------------------------------\n")
-
-print("------------APPS---------------------\n")
-for post in posts_apps:
-    print(post + "|" + str(current_timestamp) + "\n")
-    print("\n" + time.strftime("%a, %b %d %I:%M %p"))
-    print("-----------------------------------------\n")        
-
-for post in posts_to_print:
-    print(post + "|" + str(current_timestamp) + "\n")
-    print("\n" + time.strftime("%a, %b %d %I:%M %p"))
-    print("-----------------------------------------\n")
-        
