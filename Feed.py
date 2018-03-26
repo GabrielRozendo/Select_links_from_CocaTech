@@ -1,35 +1,36 @@
 import feedparser
-import time
-import json
+import ConnectionDB
+
+ConnectionDB.drop()
+qt=len(ConnectionDB.readAll())
+print ('Qt de docs existentes: {}'.format(str(qt)))
 
 url = 'http://feeds.cocatech.com.br/cocatechpodcast'
 feed = feedparser.parse(url)
 
 class PostFeed(object):
-    def __init__(self, title, tags, link, data):
+    def __init__(self, title, tags, link, data, origem):
         self.title = title
         self.tags = tags
         self.link = link
         self.data = data
+        self.origem = origem
 
-
-posts = []
 
 for post in feed.entries:
-    post_tags = []
-    for tag in post.tags:
-        post_tags.append(tag['term'])    
-    tags = ", ".join(post_tags)
-    postItem = PostFeed(post.title, tags, post.link, post.published)
-    posts.append(postItem)
-    
-tagAnterior = ''
+    if not ConnectionDB.exists(post.link):
+        post_tags = []
+        for tag in post.tags:
+            post_tags.append(tag['term'])    
+        tags = "; ".join(post_tags)
+        postItem = PostFeed(post.title, tags, post.link, post.published, "Site CocaTech")
+        
+        ConnectionDB.insert(postItem)
+
+
+posts = ConnectionDB.readAll()
 for post in posts:
-    if tagAnterior != post.tags:
-        print('Tags diferentes!')
-        tagAnterior = post.tags
-    
-    print('Titulo: {}'.format(post.title))
-    print('Postado em: {} -- com as tags: {}'.format(post.data, post.tags))
-    print('Link: {}'.format(post.link))
+    print('Titulo: {}'.format(post['title']))
+    print('Postado em: {} -- com as tags: {}'.format(post['data'], post['tags']))    
+    print('Origem: {}\t\tLink: {}'.format(post['origem'], post['link']))
     print("-----------------------------------------\n")

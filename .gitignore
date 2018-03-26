@@ -1,0 +1,5 @@
+_Select_links_from_CocaTech/
+.vsco
+.vscode/
+__pycache__/
+App.ini
