@@ -10,9 +10,10 @@ try:
 
     LogObj.Inicio()
 
-
-    url = 'http://feeds.cocatech.com.br/cocatechpodcast'
-    feed = feedparser.parse(url)
+    class Fonte(object):
+        def __init__(self, link, nome):
+            self.link = link
+            self.nome = nome
 
 
     class PostFeed(object):
@@ -24,15 +25,22 @@ try:
             self.origem = origem
 
 
-    for post in feed.entries:
-        if not ConnectionDB.exists(post.link):
-            post_tags = []
-            for tag in post.tags:
-                post_tags.append(tag['term'])    
-            tags = "; ".join(post_tags)
-            postItem = PostFeed(post.title, tags, post.link, post.published, "Site CocaTech")
+    fontes = []
+    fontes.append(Fonte('http://feeds.cocatech.com.br/cocatechpodcast', 'Site CocaTech'))
+
+
+    for fonte in fontes:
             
-            ConnectionDB.insert(postItem)
+        feed = feedparser.parse(fonte.link)
+        for post in feed.entries:
+            if not ConnectionDB.exists(post.link):
+                post_tags = []
+                for tag in post.tags:
+                    post_tags.append(tag['term'])    
+                tags = "; ".join(post_tags)
+                postItem = PostFeed(post.title, tags, post.link, post.published, fonte.nome)
+                
+                ConnectionDB.insert(postItem)
 
 
     posts = ConnectionDB.readAll()
