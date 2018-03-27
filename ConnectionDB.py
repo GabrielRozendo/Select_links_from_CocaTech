@@ -1,15 +1,18 @@
 import pymongo
 import datetime
-import ConfigParser
+import configparser
 
-appConfig = ConfigParser.ConfigParser()
+appConfig = configparser.ConfigParser()
 appConfig.read("App.ini")
 connection = appConfig.get("Connection", "uri")
 
-uri = 'mongodb://'+connection+'?ssl=true&replicaSet=globaldb'
+uri = 'mongodb://'+connection+'?ssl=true&ssl_cert_reqs=CERT_NONE&replicaSet=globaldb'
 client = pymongo.MongoClient(uri)
-
 db = client.SelectLinks
+
+
+def GetDate():
+    return str(datetime.datetime.now())
 
 
 def insert(Post):
@@ -21,7 +24,7 @@ def insert(Post):
             "data": Post.data,
             "tags": Post.tags,
             "origem": Post.origem,
-            "criadoEm": str(datetime.datetime.now())
+            "criadoEm": GetDate()
             })
         print ('Post {} do {} salvo com sucesso!'.format(Post.title, Post.origem))
 
@@ -79,7 +82,7 @@ def update(link, Post):
             {"link": link},
             {
             "$set": {
-                 "title": Post.title,
+                    "title": Post.title,
                 "data": Post.data,
                 "tags": Post.tags,
                 "origem": Post.origem
@@ -87,7 +90,7 @@ def update(link, Post):
             }
         )
         print ("Atualizado!")
-    
+
     except Exception as e:
         print (str(e))
 
@@ -103,5 +106,14 @@ def delete(link):
 def drop():
     try:
         db.Posts.drop()
+    except Exception as e:
+        print (str(e))
+
+
+def InsertLog(logObj):
+    try:
+        db.Logs.insert_one(logObj)
+        print ('Log salvo com sucesso!')
+
     except Exception as e:
         print (str(e))
