@@ -15,19 +15,38 @@ logObj.msgs = []
 
 def Inicio():
     logObj.dataInicio = ConnectionDB.GetDate()
-    Registrar('Inicio...', True)
+    Escrever('Inicio...')
 
 
-def Registrar(texto, tela=False):
-    dataHora = ConnectionDB.GetDate()
+def EscreverLog(texto):
     msg = MsgObj()
-    msg.dataHora = dataHora
+    msg.dataHora = ConnectionDB.GetDate()
     msg.Texto = texto
     logObj.msgs.append(msg)
 
-    if tela:
-        print('{}\t{}'.format(dataHora, texto))
 
+def EscreverTela(texto):
+    print('{}\t{}'.format(ConnectionDB.GetDate(), texto))
+
+
+def Escrever(texto):
+    EscreverLog(texto)
+    EscreverTela(texto)
+
+
+def Resultado(value):
+    logObj.sucesso = value
+    Escrever('Resultado: {}'.format(str(value)))
+
+def Sucesso():
+    Resultado(True)
+
+def Erro(erro):
+    Escrever('Exceção: {}'.format(erro))
+    Resultado(False)
+
+def Alterado(value):
+    logObj.alterado = value
 
 def FinalizarLog():
     logObj.dataFim = ConnectionDB.GetDate()

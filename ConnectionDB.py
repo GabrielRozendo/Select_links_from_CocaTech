@@ -1,6 +1,9 @@
 import pymongo
 import datetime
 import configparser
+from LogObj import Escrever, EscreverTela, EscreverLog
+from enum import Enum
+
 
 appConfig = configparser.ConfigParser()
 appConfig.read("App.ini")
@@ -14,8 +17,17 @@ db = client.SelectLinks
 def GetDate():
     return str(datetime.datetime.now())
 
+#region Posts
 
-def insert(Post):
+class PostFeed(object):
+    def __init__(self, title, tags, link, data, origem):
+        self.title = title
+        self.tags = tags
+        self.link = link
+        self.data = data
+        self.origem = origem
+
+def InsertPost(Post):
     try:
         db.Posts.insert_one(
             {
@@ -26,57 +38,57 @@ def insert(Post):
             "origem": Post.origem,
             "criadoEm": GetDate()
             })
-        print ('Post {} do {} salvo com sucesso!'.format(Post.title, Post.origem))
+        Escrever ('Post {} do {} salvo com sucesso!'.format(Post.title, Post.origem))
 
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no insert de post: {}'.format(str(e)))
 
 
-def read():
+def ReadPost():
     try:
         posts = db.Posts.find()
-        print ('Lendo todos posts salvos:')
+        EscreverTela ('Lendo todos posts salvos:')
         for p in posts:
-            print ('{} de {}. Em {}'.format(p.title, p.origem, p.data))
+            EscreverTela ('{} de {}. Em {}'.format(p.title, p.origem, p.data))
 
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no read: {}'.format(str(e)))
 
 
-def exists(link):
+def PostExists(link):
     try:
         posts = db.Posts.find({'link':link}).limit(1)
         
         if posts.count() == 0: 
-            #print ('Não existe')
+            #EscreverTela ('Post NÃO existe: \t--\t{}'.format(posts[0]['title']))
             return False
         else:
-            print ('Post: {} \t--\t\tjá existe!'.format(posts[0]['title']))
+            #EscreverTela ('Post já existe: \t--\t\t{}'.format(posts[0]['title']))
             return True
 
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no exists: {}'.format(str(e)))
 
 
-def readAll():
+def ReadAllPosts():
     try:
         return list(db.Posts.find())
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no readAll: {}'.format(str(e)))
 
 
-def readOrigem(origem):
+def ReadPostsDaOrigem(origem):
     try:
         posts = db.Posts.find({'origem':origem})
-        print ('Lendo todos posts com origem:'+origem)
+        EscreverTela ('Lendo todos posts com origem:'+origem)
         for p in posts:
-            print ('{} de {}. Em {}'.format(p.title, p.origem, p.data))
+            EscreverTela ('{} de {}. Em {}'.format(p.title, p.origem, p.data))
 
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no readOrigem: {}'.format(str(e)))
 
 
-def update(link, Post):
+def UpdatePost(link, Post):
     try:
         db.Posts.update_one(
             {"link": link},
@@ -89,31 +101,62 @@ def update(link, Post):
             }
             }
         )
-        print ("Atualizado!")
+        EscreverTela ("Atualizado!")
 
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no update: {}'.format(str(e)))
 
 
-def delete(link):
+def DeletePost(link):
     try:
         db.Posts.delete_many({"link":link})
-        print ('Apagado!')
+        EscreverTela ('Apagado!')
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no delete: {}'.format(str(e)))
 
 
-def drop():
+def DropPosts():
     try:
         db.Posts.drop()
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no drop: {}'.format(str(e)))
+#endregion
 
+#region Links
+
+class TipoLink(Enum):
+    AppStore = 'Apple Store (iOS)',
+    Mac = 'Mac Store',
+    PlayStore = 'Google Play Store (Android)',
+    News = 'Notícias'
+
+class LinkObj(object):
+    def __init__(self, fonte, titulo, url, tipoLink):
+        self.fonte = fonte
+        self.titulo = titulo
+        self.url = url
+        self.tipo = tipoLink
+
+def InsertLink(linkObj):
+        try:
+            db.Links.insert_one(
+            {
+            "fonte": linkObj.fonte,
+            "titulo": linkObj.titulo,
+            "url": linkObj.url,
+            "tipo": linkObj.tipo,
+            "criadoEm": GetDate()
+            })
+            Escrever ('Link ({}) {}: {} de {} salvo com sucesso!'.format(linkObj.tipo, linkObj.titulo, linkObj.url, linkObj.fonte))
+
+        except Exception as e:
+            Escrever ('Exceção no insert de link: {}'.format(str(e)))
+#endregion
 
 def InsertLog(logObj):
     try:
         db.Logs.insert_one(logObj)
-        print ('Log salvo com sucesso!')
+        EscreverTela ('Log salvo com sucesso!')
 
     except Exception as e:
-        print (str(e))
+        Escrever ('Exceção no InsertLog: {}'.format(str(e)))
