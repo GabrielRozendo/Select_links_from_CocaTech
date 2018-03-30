@@ -1,15 +1,39 @@
-def GetCocaTech(soup):
-    apps = soup.find_all('div', class_='wpappbox')
-    for app in apps:
-        print()
+import ConnectionDB
+from LogObj import Erro, Escrever
+from Classes import LinkObj, TipoLink 
+
+
+def SalvarLinks(links):
+    try:
+        for link in links:
+            ConnectionDB.InsertLink(link)
+        return True
+    except Exception as e:
+        Erro(str(e))
+        return False
+
+
+def GetCocaTech(link, soup):
+    body = soup.find('div', class_='instapaper_body')
+
+    links = []
+    for iframe in body.find_all('iframe'):
+        Escrever('IFrame encontrado {}'.format(iframe))
+        links.append(LinkObj('Coca Tech', soup.title.text, link, iframe, TipoLink.Video))
+
+    for a in body.find_all('a'):
+        links.append(LinkObj('Coca Tech', soup.title.text, link, a, TipoLink.Video))
+        Escrever('{} --> {}'.format(a.text, a['href']))
+
+    for app in body.find_all('div', class_='wpappbox'):
         divIcon = app.find('div', class_='appicon')
         icon = divIcon.find('img')
         icon = 'https:' + icon['src']
 
         divTitle = app.find('a', class_='apptitle', href=True)
-        link = divTitle['href']
+        #href = divTitle['href']
         title = divTitle['title']
-        
+
         divDeveloper = app.find('div', class_='developer')
         developerName = divDeveloper.a.string
 
@@ -17,26 +41,50 @@ def GetCocaTech(soup):
         price = divPrice.text
 
         if 'macappstore' in app.attrs['class']:
-            store = 'Mac'
+            store = TipoLink.Mac
         elif 'appstore' in app.attrs['class']:
-            store = 'iOS'
+            store = TipoLink.AppStore
         else:
-            store = 'desconhecido!'
+            store = TipoLink.Desconhecido
 
-        print('App {}: {} || by {}, {}'.format(i, title, developerName, price))
-        print('Link ({}): {}'.format(store, link))
-        print('----------------------------')
-    itens = []
-    return itens
+        Escrever('App {} || by {}, {}'.format(title, developerName, price))
+        Escrever('Link ({}): {}'.format(store, link))
+        Escrever('----------------------------')
 
-def GetLoopMatinal(soup):
-    itens = []
-    return itens
+        links.append(LinkObj('Coca Tech', soup.title.text, link, app, store))
 
-def GetAreaTransferencia(soup):
-    itens = []
-    return itens
+    return SalvarLinks(links)
 
-def GetDefault(soup):
-    itens = []
-    return itens
+
+def GetLoopMatinal(link, soup):
+    links = []
+    for a in soup.find_all('a'):
+        links.append(LinkObj('Loop Matinal', soup.title.text, link, a, TipoLink.Desconhecido))
+        Escrever('{} --> {}'.format(a.text, GetHref(a)))
+
+    return SalvarLinks(links)
+
+
+def GetAreaTransferencia(link, soup):
+    links = []
+    for a in soup.find_all('a'):
+        links.append(LinkObj('Área de Transferência', soup.title.text, link, a, TipoLink.Desconhecido))
+        Escrever('{} --> {}'.format(a.text, GetHref(a)))
+
+    return SalvarLinks(links)
+
+
+def GetDefault(link, soup):
+    links = []
+    for a in soup.find_all('a'):
+        links.append(LinkObj('Desconhecido', soup.title.text, link, a, TipoLink.Desconhecido))
+        Escrever('{} --> {}'.format(a.text, GetHref(a)))
+
+    return SalvarLinks(links)
+
+
+def GetHref(a):
+    if 'href' in a:
+        return a['href']
+    else:
+        return ''

@@ -23,9 +23,9 @@ Como nem sempre dá para acompanhar escutando os podcasts do Coca e as vezes tem
 
 2: ler a página e pegar os links ⚠️
 
-3: criar cosmos db ❌
+3: criar cosmos db ✅
 
-4: salvar esses dados no azure ❌
+4: salvar esses dados no azure ✅
 
 5: exibir via angular ❌
 

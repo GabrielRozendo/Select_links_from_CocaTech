@@ -1,32 +1,41 @@
 import requests
 from bs4 import BeautifulSoup
-import Crawlers_parse 
 import ConnectionDB
+from Crawlers_parse import (GetAreaTransferencia, GetCocaTech, GetDefault, GetLoopMatinal)
+from LogObj import Erro, Escrever
 
-def Crawler(source, url):
-    page = requests.get(url)
-    print(page.status_code)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    print(soup.title.string)
-    links = soup.a
 
-    Switch(source, soup)
+def Crawler(sourceTitle, url):
+    try:
+        Escrever('Crawler da página: {}'.format(url))
+        response = requests.get(url)
+        Escrever('Código do status de resultado: {}. Ok: {}'.format(response.status_code, response.ok))
+        link = response.url.split('?', 1)[0]
+        Escrever('Link {}\t\tOriginal: {}'.format(link, response.url))
 
-def Switch(source, soup):
-    return {
-        'Coca Tech': CocaTech(soup),
-        'Área de Transferência': AreaTransferencia(soup),
-        'Loop Matinal': LoopMatinal(soup)
-    }.get(source, Default(soup))
+        if response.ok:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            Escrever('Página recuperada: {}'.format(soup.title.text))
+            return Switch(sourceTitle, soup, link)
+        else:
+            Escrever('Página não recuperada...')
+            return False
+    except Exception as e:
+        Erro(str(e))
+        return False
 
-def Default(soup):
-    return Crawlers_parse.GetDefault(soup)
 
-def CocaTech(soup):
-    return Crawlers_parse.GetCocaTech(soup)
-
-def AreaTransferencia(soup):
-    return Crawlers_parse.GetAreaTransferencia(soup)
-
-def LoopMatinal(soup):
-    return Crawlers_parse.GetLoopMatinal(soup)
+def Switch(sourceTitle, soup, link):
+    try:
+        if 'CocaTech' in sourceTitle:
+            return GetCocaTech(link, soup)
+        elif 'Área de Transferência' in sourceTitle:
+            return GetAreaTransferencia(link, soup)
+        elif 'Loop Matinal' in sourceTitle:
+            return GetLoopMatinal(link, soup)
+        else:
+            Escrever('Source não encontrado: {}'.format(sourceTitle))
+            return GetDefault(link, soup)
+    except Exception as e:
+        Erro(str(e))
+        return False

@@ -1,9 +1,12 @@
-import ConnectionDB
 import json
 
-class LogObj(object): 
+import ConnectionDB
+
+
+class LogObj(object):
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 
 class MsgObj(object):
     pass
@@ -38,20 +41,22 @@ def Resultado(value):
     logObj.sucesso = value
     Escrever('Resultado: {}'.format(str(value)))
 
+
 def Sucesso():
     Resultado(True)
+
 
 def Erro(erro):
     Escrever('Exceção: {}'.format(erro))
     Resultado(False)
 
+
 def Alterado(value):
     logObj.alterado = value
 
+
 def FinalizarLog():
-    logObj.dataFim = ConnectionDB.GetDate()
+    logObj.dataFim = GetDate()
     value = logObj.toJSON()
     value = json.loads(value)
     ConnectionDB.InsertLog(value)
-
-
