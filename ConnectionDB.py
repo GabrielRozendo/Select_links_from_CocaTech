@@ -1,7 +1,9 @@
 import configparser
+import json
 import pymongo
 from Classes import GetDate
 from LogObj import Escrever, EscreverLog, EscreverTela
+
 
 appConfig = configparser.ConfigParser()
 appConfig.read("App.ini")
@@ -13,22 +15,32 @@ db = client.SelectLinks
 
 
 # region Posts
-def InsertPost(Post):
+def InsertPost_(Post):
     try:
         db.Posts.insert_one(
             {
-                "title": Post.title,
+                "titulo": Post.title,
                 "link": Post.link,
                 "data": Post.data,
                 "tags": Post.tags,
                 "origem": Post.origem,
                 "criadoEm": GetDate()
             })
-        Escrever('Post {} do {} salvo com sucesso!'.format(
-            Post.title, Post.origem))
+        Escrever('Post {} do {} salvo com sucesso!'.format(Post.title, Post.origem))
 
     except Exception as e:
         Escrever('Exceção no insert de post: {}'.format(str(e)))
+
+
+def InsertPostMany(posts):
+    try:
+        qt = len(posts)
+        Escrever('Posts recebidos para salvar: {}'.format(qt))
+        result = db.Posts.insert_many(posts)
+        qtResult = len(result.inserted_ids)
+        Escrever('{} posts salvos com sucesso! Qt equivalente: {}'.format(qtResult, str(qt == qtResult)))
+    except Exception as e:
+        Escrever('Exceção no insert post many: {}'.format(str(e)))
 
 
 def ReadPost():
@@ -85,7 +97,7 @@ def UpdatePost(link, Post):
             {"link": link},
             {
                 "$set": {
-                    "title": Post.title,
+                    "titulo": Post.title,
                     "data": Post.data,
                     "tags": Post.tags,
                     "origem": Post.origem
@@ -118,7 +130,7 @@ def DropPosts():
 # region Links
 
 
-def InsertLink(linkObj):
+def InsertLink_(linkObj):
     try:
         db.Links.insert_one(
             {
@@ -129,11 +141,21 @@ def InsertLink(linkObj):
                 "tipo": linkObj.tipo,
                 "criadoEm": GetDate()
             })
-        Escrever('Link ({}) {}: {} de {} salvo com sucesso!'.format(
-            linkObj.tipo, linkObj.titulo, linkObj.link, linkObj.fonte))
+        Escrever('Link ({}) {}: {} de {} salvo com sucesso!'.format(linkObj.tipo, linkObj.titulo, linkObj.link, linkObj.fonte))
 
     except Exception as e:
         Escrever('Exceção no insert de link: {}'.format(str(e)))
+
+
+def InsertLinkMany(links):
+    try:
+        qt = len(links)
+        Escrever('Links recebidos para salvar: {}'.format(qt))
+        result = db.Links.insert_many(links)
+        qtResult = len(result.inserted_ids)
+        Escrever('{} links salvos com sucesso! Qt equivalente: {}'.format(qtResult, str(qt == qtResult)))
+    except Exception as e:
+        Escrever('Exceção no insert link many: {}'.format(str(e)))
 
 
 def ReadAllLinks():

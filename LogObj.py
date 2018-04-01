@@ -1,11 +1,5 @@
-import json
-
 import ConnectionDB
-
-
-class LogObj(object):
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+from Classes import GetDate, LogObj
 
 
 class MsgObj(object):
@@ -17,29 +11,29 @@ logObj.msgs = []
 
 
 def Inicio():
-    logObj.dataInicio = ConnectionDB.GetDate()
-    Escrever('Inicio...')
+    logObj.dataInicio = GetDate()
+    Escrever('Inicio...', 0)
 
 
 def EscreverLog(texto):
     msg = MsgObj()
-    msg.dataHora = ConnectionDB.GetDate()
+    msg.dataHora = GetDate()
     msg.Texto = texto
     logObj.msgs.append(msg)
 
 
 def EscreverTela(texto):
-    print('{}\t{}'.format(ConnectionDB.GetDate(), texto))
+    print('{}\t{}'.format(GetDate(), texto))
 
 
-def Escrever(texto):
+def Escrever(texto, nivel=0):
     EscreverLog(texto)
-    EscreverTela(texto)
+    EscreverTela(('\t'*nivel) + texto)
 
 
 def Resultado(value):
     logObj.sucesso = value
-    Escrever('Resultado: {}'.format(str(value)))
+    Escrever('Resultado. Sucesso: {}'.format(str(value)), 0)
 
 
 def Sucesso():
@@ -47,7 +41,7 @@ def Sucesso():
 
 
 def Erro(erro):
-    Escrever('Exceção: {}'.format(erro))
+    Escrever('Exceção: {}'.format(erro), 0)
     Resultado(False)
 
 
@@ -57,6 +51,6 @@ def Alterado(value):
 
 def FinalizarLog():
     logObj.dataFim = GetDate()
-    value = logObj.toJSON()
-    value = json.loads(value)
-    ConnectionDB.InsertLog(value)
+    Escrever('FINALIZADO', 0)
+    json = logObj.toJSON()
+    ConnectionDB.InsertLog(json)

@@ -1,8 +1,44 @@
 import feedparser
 import ConnectionDB
 from Classes import PostFeed
-from LogObj import Escrever, EscreverLog, EscreverTela, Inicio, FinalizarLog, Alterado, Sucesso, Erro
 from Crawler import Crawler
+from LogObj import (Alterado, Erro, Escrever, EscreverLog, EscreverTela, FinalizarLog, Inicio, Sucesso)
+
+
+def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
+    try:
+        Escrever('Novo post encontrado de {}. Titulo: {}. Link: {}'.format(titulo, postItem.title, postItem.link), nivel)
+
+        links = Crawler(titulo, postItem, nivel+1)
+        if links is not None:
+            lstLinks.extend(links)
+
+            if 'tags' in postItem:
+                post_tags = []
+                for tag in postItem.tags:
+                    post_tags.append(tag['term'])
+                tags = "; ".join(post_tags)
+            else:
+                tags = None
+
+            if 'published' in postItem:
+                pubDate = postItem.published
+            elif 'pubDate' in postItem:
+                pubDate = postItem.pubDate
+            else:
+                pubDate = None
+
+            postItem = PostFeed(postItem.title, tags, postItem.link, pubDate, titulo)
+            lstPosts.append(postItem.toJSON())
+            return True
+        else:
+            Escrever('Crawler não retornou links', nivel)
+            return False
+
+    except Exception as e:
+        Erro('Exceção no novo post encontrado. Erro: {}'.format(str(e)))
+        return False
+
 
 try:
 
@@ -13,55 +49,66 @@ try:
 
     Inicio()
     novoPostSalvo = False
+    lstLinks = []
+    lstPosts = []
 
-    with open('Sources.txt') as txt:
+    with open('Fontes.txt') as txt:
         fontes = txt.readlines()
         # remove whitespace characters like '\n' at the end of each line
         fontes = [x.strip() for x in fontes]
 
     for fonte in fontes:
-        # split = fonte.split(' ')
-        # fonteEnum = split[0]
-        # fonteUrl = split[1]
-        # Escrever('Acessando a fonte {}: {}'.format(fonteEnum, fonteUrl))
-        Escrever('Acessando a fonte: {}'.format(fonte))
-
+        nivel = 0
+        Escrever('Acessando a fonte: {}'.format(fonte), nivel)
 
         try:
+            nivel += 1
             novoPostNesseFeed = False
             rss = feedparser.parse(fonte)
-            Escrever('Resultado do parse: {}'.format(rss.status))
-            title = rss.feed.title
-            Escrever('Feed {} atualizado em {} e possui {} itens...'.format(
-                title, rss.updated, len(rss.entries)))
+            Escrever('Resultado do parse: {}'.format(rss.status), nivel)
+            rssTitle = rss.feed.title
+            if 'updated' in rss:
+                updated = rss.update
+            elif 'updated' in rss.feed:
+                updated = rss.feed.update
+            elif 'published' in rss.feed:
+                updated = rss.feed.published
 
-            for post in rss.entries:
-                if not ConnectionDB.PostExists(post.link):
-                    Escrever('Novo post encontrado...')
-                    if(Crawler(title, post.link)):
+            Escrever('Feed {} atualizado em {} e possui {} itens...'.format(
+                rssTitle, updated, len(rss.entries)), nivel)
+
+            i = 0
+            qtEntries = len(rss.entries)
+            for postItem in rss.entries:
+                i += 1
+                EscreverTela('{} de {}'.format(i, qtEntries))
+                if not ConnectionDB.PostExists(postItem.link):
+                    if NovoPostEncontrado(rssTitle, postItem, lstPosts, lstLinks, nivel):
                         novoPostNesseFeed = True
-                        novoPostSalvo = True
-                        post_tags = []
-                        for tag in post.tags:
-                            post_tags.append(tag['term'])
-                        tags = "; ".join(post_tags)
-                        postItem = PostFeed(post.title, tags, post.link, post.published, rss.title)
-                        ConnectionDB.InsertPost(postItem)
-                    else:
-                        Escrever('Crawler deu erro :(')
-            if not novoPostNesseFeed:
-                Escrever('Nada novo encontrado nesse feed...')
+
+            if novoPostNesseFeed:
+                novoPostSalvo = True
+            else:
+                Escrever('Nada novo encontrado nesse feed...', nivel)
 
         except Exception as e:
-            Erro(str(e))
+            Erro('Exceção ao tratar a fonte. Erro: {}'.format(str(e)))
 
         finally:
-            Escrever('------------')
+            nivel = 0
+            Escrever('------------', nivel)
+
+    if lstLinks: # not lstLinks:
+        ConnectionDB.InsertLinkMany(lstLinks)
+    
+    if lstPosts: # len(lstPosts) > 0:
+        ConnectionDB.InsertPostMany(lstPosts)
+
 
     Alterado(novoPostSalvo)
 
-    posts = ConnectionDB.ReadAllPosts()
-    Escrever('Posts salvos nesse momento: {}'.format(len(posts)))
+    #posts = ConnectionDB.ReadAllPosts()
+    #Escrever('Posts salvos nesse momento: {}'.format(len(posts)), nivel)
     # for post in posts:
     #    print('Titulo: {}'.format(post['title']))
     #    print('Postado em: {} -- com as tags: {}'.format(post['data'], post['tags']))

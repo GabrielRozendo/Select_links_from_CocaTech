@@ -1,4 +1,6 @@
 import datetime
+import json
+import warnings
 from enum import Enum
 
 
@@ -6,13 +8,48 @@ def GetDate():
     return str(datetime.datetime.now())
 
 
+def InList(lstBuscar, conteudo):
+    return any(x in conteudo for x in lstBuscar)
+
+
+def InListAnyInS(lstBuscar, conteudo):
+    if isinstance(conteudo, (list)):
+        conteudoUpper = [x.upper() for x in conteudo]
+    else:
+        conteudoUpper = conteudo.upper()
+
+    lstBuscarUpper = [x.upper() for x in lstBuscar]
+    return any(x in conteudoUpper for x in lstBuscarUpper)
+
+
+def InListAllInS(lstBuscar, conteudo):
+    if isinstance(conteudo, (list)):
+        conteudoUpper = [x.upper() for x in conteudo]
+    else:
+        conteudoUpper = conteudo.upper()
+
+    lstBuscarUpper = [x.upper() for x in lstBuscar]
+    return all(x in conteudoUpper for x in lstBuscarUpper)
+
+
+class LogObj:
+    def toJSON(self):
+        dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
+        return json.loads(dumps)
+
+
 class PostFeed(object):
-    def __init__(self, title, tags, link, data, origem):
-        self.title = title
+    def __init__(self, titulo, tags, link, data, origem):
+        self.titulo = titulo
         self.tags = tags
-        self.link = link
+        self.link = str(link)
         self.data = data
         self.origem = origem
+        self.criadoEm = GetDate()
+
+    def toJSON(self):
+        dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
+        return json.loads(dumps)
 
 
 class TipoLink(Enum):
@@ -26,15 +63,14 @@ class TipoLink(Enum):
 
 
 class LinkObj(object):
-    def __init__(self, fonte, titulo, postUrl, link, tipoLink):
+    def __init__(self, fonte, texto, postUrl, link, tipoLink):
         self.fonte = fonte
-        self.titulo = titulo
+        self.texto = texto
         self.postUrl = postUrl
         self.link = str(link)
         self.tipo = tipoLink.value
+        self.criadoEm = GetDate()
 
-
-class Sources(Enum):
-    CocaTech = 'Coca Tech'
-    LoopMatinal = 'Loop Matinal'
-    AreaTransferencia = 'Área de Transferência'
+    def toJSON(self):
+        dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
+        return json.loads(dumps)
