@@ -56,15 +56,7 @@ def ReadPost():
 
 def PostExists(link):
     try:
-        posts = db.Posts.find({'link': link}).limit(1)
-
-        if posts.count() == 0:
-            #EscreverTela ('Post NÃO existe: \t--\t{}'.format(posts[0]['title']))
-            return False
-        else:
-            #EscreverTela ('Post já existe: \t--\t\t{}'.format(posts[0]['title']))
-            return True
-
+        return bool(db.Posts.find_one({'link': link}))
     except Exception as e:
         Escrever('Exceção no exists: {}'.format(str(e)))
 
@@ -77,7 +69,7 @@ def ReadAllPosts():
 
 
 def QtPosts():
-    return len(ReadAllPosts())
+    return db.Posts.count()
 
 
 def ReadPostsDaOrigem(origem):
@@ -166,7 +158,7 @@ def ReadAllLinks():
 
 
 def QtLinks():
-    return len(ReadAllLinks())
+    return db.Links.count()
 
 
 def DropLinks():

@@ -74,11 +74,11 @@ try:
             elif 'published' in rss.feed:
                 updated = rss.feed.published
 
+            qtEntries = len(rss.entries)
             Escrever('Feed {} atualizado em {} e possui {} itens...'.format(
-                rssTitle, updated, len(rss.entries)), nivel)
+                rssTitle, updated, qtEntries), nivel)
 
             i = 0
-            qtEntries = len(rss.entries)
             for postItem in rss.entries:
                 i += 1
                 EscreverTela('{} de {}'.format(i, qtEntries))
