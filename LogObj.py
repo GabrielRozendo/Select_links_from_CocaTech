@@ -32,18 +32,17 @@ def EscreverTela(texto, data = True, linhanova = True):
 
     global qtChars    # Needed to modify global copy of globvar
     qtChars = len(s)
-    e = '\n' if linhanova else ''
-    #print(s, end=e)
-    sys.stdout.write('\033[K' + s + '\r')
+    e = '\n' if linhanova else '\r'
+    print(s, end=e)
 
 
 def ApagarLinhaTela(n):
-    print(' ' * n, end='')
+    print(' ' * n, end='\r')
 
 
 def EscreverTelaMesmaLinha(texto):    
-    ApagarLinhaTela(qtChars)
-    EscreverTela(texto, False, False)
+    ApagarLinhaTela(99)
+    EscreverTela(texto, True, False)
 
 
 def Escrever(texto, nivel=0):
@@ -72,6 +71,6 @@ def Alterado(value):
 def FinalizarLog():
     logObj.dataFim = GetDate()
     Escrever('FINALIZADO', 0)
-    Escrever(DateTimeDiff(logObj.dataInicio, logObj.dataFim))
+    # Escrever(DateTimeDiff(logObj.dataInicio, logObj.dataFim))
     json = logObj.toJSON()
     ConnectionDB.InsertLog(json)

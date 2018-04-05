@@ -1,5 +1,8 @@
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
+
 import ConnectionDB
 from Classes import InListAnyInS, LinkObj, TipoLink
 from LogObj import Erro, Escrever
@@ -42,10 +45,15 @@ def GetCocaTech(link, soup, nivel):
     links = []
     for iframe in body.find_all('iframe'):
         #Escrever('IFrame encontrado {}'.format(iframe), nivel)
-        links.append(LinkObj('Coca Tech', soup.title.text, link, iframe, TipoLink.Video).toJSON())
+        linkObj = LinkObj('Coca Tech', soup.title.text, link, iframe, TipoLink.Video)
+        json = linkObj.toJSON()
+        links.append(json)
 
     for a in body.find_all('a'):
-        links.append(LinkObj('Coca Tech', soup.title.text, link, a, TipoLink.News).toJSON())
+        linkObj = LinkObj('Coca Tech', soup.title.text, link, a, TipoLink.News)
+        json = linkObj.toJSON()
+        links.append(json)
+
         #Escrever('{} --> {}'.format(a.text, a['href']), nivel)
 
     for app in body.find_all('div', class_='wpappbox'):

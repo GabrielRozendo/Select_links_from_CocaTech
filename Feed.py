@@ -81,11 +81,13 @@ try:
             i = 0
             for postItem in rss.entries:
                 i += 1
-                EscreverTelaMesmaLinha('{} de {}'.format(i, qtEntries))
+                EscreverTelaMesmaLinha('{} de {}\t'.format(i, qtEntries))
                 if not ConnectionDB.PostExists(postItem.link):
+                    EscreverTela('', False, False)
                     if NovoPostEncontrado(rssTitle, postItem, lstPosts, lstLinks, nivel):
                         novoPostNesseFeed = True
 
+            EscreverTela('')
             if novoPostNesseFeed:
                 novoPostSalvo = True
             else:

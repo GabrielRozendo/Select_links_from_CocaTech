@@ -5,7 +5,7 @@ from enum import Enum
 
 
 def GetDate():
-    return datetime.now()
+    return str(datetime.now())
 
 
 def InList(lstBuscar, conteudo):
@@ -71,6 +71,7 @@ class LinkObj(object):
         self.tipo = tipoLink.value
         self.criadoEm = GetDate()
 
+    
     def toJSON(self):
         dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
         return json.loads(dumps)
