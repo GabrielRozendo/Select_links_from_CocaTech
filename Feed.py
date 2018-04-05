@@ -2,7 +2,7 @@ import feedparser
 import ConnectionDB
 from Classes import PostFeed
 from Crawler import Crawler
-from LogObj import (Alterado, Erro, Escrever, EscreverLog, EscreverTela, FinalizarLog, Inicio, Sucesso)
+from LogObj import (Alterado, Erro, Escrever, EscreverLog, EscreverTela, EscreverTelaMesmaLinha, FinalizarLog, Inicio, Sucesso)
 
 
 def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
@@ -81,7 +81,7 @@ try:
             i = 0
             for postItem in rss.entries:
                 i += 1
-                EscreverTela('{} de {}'.format(i, qtEntries))
+                EscreverTelaMesmaLinha('{} de {}'.format(i, qtEntries))
                 if not ConnectionDB.PostExists(postItem.link):
                     if NovoPostEncontrado(rssTitle, postItem, lstPosts, lstLinks, nivel):
                         novoPostNesseFeed = True

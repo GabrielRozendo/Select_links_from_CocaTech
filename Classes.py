@@ -1,11 +1,11 @@
-import datetime
+from datetime import datetime 
 import json
 import warnings
 from enum import Enum
 
 
 def GetDate():
-    return str(datetime.datetime.now())
+    return datetime.now()
 
 
 def InList(lstBuscar, conteudo):
@@ -74,3 +74,26 @@ class LinkObj(object):
     def toJSON(self):
         dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
         return json.loads(dumps)
+
+
+def DateTimeDiff(s1, s2):
+    tdelta = s2 - s1
+    tempoGasto = ''
+
+    plural = '(s)' if tdelta.days > 1 else ''
+    if tdelta.days > 0:
+        tempoGasto += '{} dia{} '.format(tdelta.days, plural)
+
+    hora = tdelta.seconds//3600
+    plural = '(s)' if hora > 1 else ''
+    if hora > 0:    
+        tempoGasto += '{} hora{} '.format(hora, plural)
+
+    minutos = (tdelta.seconds//60)%60
+    plural = '(s)' if minutos > 1 else ''
+    if minutos > 0:    
+        tempoGasto += '{} minuto{} '.format(minutos, plural)
+
+    tempoGasto += '{} seg'.format(tdelta.seconds)
+
+    return tempoGasto
