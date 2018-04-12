@@ -1,13 +1,11 @@
-import configparser
 import json
 import pymongo
 from Classes import GetDate
 from LogObj import Escrever, EscreverLog, EscreverTela
+from AppConfig import GetConnectionURI
 
 
-appConfig = configparser.ConfigParser()
-appConfig.read("App.ini")
-connection = appConfig.get("Connection", "uri")
+connection = GetConnectionURI()
 
 uri = 'mongodb://'+connection+'?ssl=true&ssl_cert_reqs=CERT_NONE&replicaSet=globaldb'
 client = pymongo.MongoClient(uri)
