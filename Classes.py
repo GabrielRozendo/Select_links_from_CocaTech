@@ -7,6 +7,9 @@ from enum import Enum
 def GetDate():
     return str(datetime.now())
 
+def GetTime():
+    return str(datetime.now().strftime('%H:%M:%S'))
+
 
 def InList(lstBuscar, conteudo):
     return any(x in conteudo for x in lstBuscar)
@@ -75,6 +78,13 @@ class LinkObj(object):
     def toJSON(self):
         dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
         return json.loads(dumps)
+
+class TelegramBotObj(object):
+    def __init__(self, nome, id, status):
+        self.nome = nome
+        self.id = id
+        self.status = 1
+        self.criadoEm = GetDate()
 
 
 def DateTimeDiff(s1, s2):
