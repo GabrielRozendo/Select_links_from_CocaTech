@@ -119,7 +119,6 @@ def DropPosts():
 
 # region Links
 
-
 def InsertLink_(linkObj):
     try:
         db.Links.insert_one(
@@ -176,3 +175,25 @@ def InsertLog(logObj):
 
     except Exception as e:
         Escrever('Exceção no InsertLog: {}'.format(str(e)))
+
+#region Telegram
+
+def InsertTelegramConversation(telegramBotObj):
+    try:
+        db.TelegramBot.insert_one({
+                "nome": telegramBotObj.nome,
+                "id": telegramBotObj.id,
+                "status": telegramBotObj.status,
+                "criadoEm": GetDate()
+            })
+        Escrever('TelegramBotObj {} - {} salvo com sucesso!'.format(telegramBotObj.nome, str(telegramBotObj.id)))
+    except Exception as e:
+        Escrever('Exceção no InsertTelegramConversation: {}'.format(str(e)))
+
+ 
+def InativarTelegramConversation(id):
+    try:
+        db.TelegramBot.delete_one({"id": id})
+        EscreverTela('Apagado!')
+    except Exception as e:
+        Escrever('Exceção no delete: {}'.format(str(e)))
