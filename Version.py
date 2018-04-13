@@ -6,10 +6,16 @@ from LogObj import EscreverTela, EscreverTelaMesmaLinha
 from datetime import datetime
 
 
-#print(sys.version)
+print(sys.version)
 
 #pip install pipreqs
 #pipreqs --force ./
+
+for i in range(10):
+    with open('fileTxt.txt','a+') as myFile:
+        myFile.write('{}\t{}\n'.format(str(datetime.now().strftime('%H:%M:%S')), i+1))
+
+
 EscreverTela('teste1')
 EscreverTelaMesmaLinha('teste2')
 EscreverTelaMesmaLinha('teste3')
