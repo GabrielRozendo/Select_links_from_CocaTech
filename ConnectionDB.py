@@ -178,15 +178,16 @@ def InsertLog(logObj):
 
 #region Telegram
 
-def InsertTelegramConversation(telegramBotObj):
+def InsertTelegramConversation(id, name, username):
     try:
         db.TelegramBot.insert_one({
-                "nome": telegramBotObj.nome,
-                "id": telegramBotObj.id,
-                "status": telegramBotObj.status,
+                "username": username, 
+                "nome": name,
+                "id": id,
+                "status": 1,
                 "criadoEm": GetDate()
             })
-        Escrever('TelegramBotObj {} - {} salvo com sucesso!'.format(telegramBotObj.nome, str(telegramBotObj.id)))
+        Escrever('TelegramBotObj {} - {} salvo com sucesso!'.format(name, str(id)))
     except Exception as e:
         Escrever('Exceção no InsertTelegramConversation: {}'.format(str(e)))
 
@@ -197,3 +198,22 @@ def InativarTelegramConversation(id):
         EscreverTela('Apagado!')
     except Exception as e:
         Escrever('Exceção no delete: {}'.format(str(e)))
+
+
+def UsuarioAtivo(id):
+    try:
+        return bool(db.TelegramBot.find_one({'id': id, 'ativo': 1}))
+    except Exception as e:
+        Escrever('Exceção no exists: {}'.format(str(e)))
+        return False
+
+
+def ReadAllTelegramUsers():
+    try:
+        return list(db.TelegramBot.find())
+    except Exception as e:
+        Escrever('Exceção no ReadAllTelegramUsers: {}'.format(str(e)))
+
+
+def QtTelegramUsers():
+    return db.TelegramBot.count()

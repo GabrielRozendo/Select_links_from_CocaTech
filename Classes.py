@@ -79,14 +79,6 @@ class LinkObj(object):
         dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
         return json.loads(dumps)
 
-class TelegramBotObj(object):
-    def __init__(self, nome, id, status):
-        self.nome = nome
-        self.id = id
-        self.status = 1
-        self.criadoEm = GetDate()
-
-
 def DateTimeDiff(s1, s2):
     tdelta = s2 - s1
     tempoGasto = ''
