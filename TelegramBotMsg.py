@@ -7,8 +7,11 @@
 import logging
 import os.path
 
+import telegram
 from telegram.ext import CommandHandler, Updater
 
+import Classes
+import ConnectionDB
 from AppConfig import GetTelegramToken, GetValue
 from Classes import GetTime
 
@@ -18,79 +21,52 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
-fileTxt = GetValue('Telegram','IDConversationFile')
+cacheUsers = ConnectionDB.ReadAllTelegramUsers()
 
 
-# Define a few command handlers. These usually take the two arguments bot and
-# update. Error handlers also receive the raised TelegramError object in error.
-def start(bot, update):
+def start(bot, update, chat_data):
     chat_id = update.message.chat_id
-    update.message.reply_text('Hi! You will receive the links as soon they catched here')
-    with open(fileTxt,'a+') as myFile:
-        myFile.write(str(chat_id)+'\n')
-    update.message.reply_text('ID: {} saved!'.format(chat_id))
+    username = update.message.from_user.name
+    name = update.message.from_user.full_name
+    ativo = ConnectionDB.UsuarioAtivo(chat_id)
+    if ativo:
+         update.message.reply_text('Hi {}! You already started the bot. Be patience and wait for the links...'.format(name))
+    else:
+        update.message.reply_text('Hi {}! You will receive the links as soon we catched them here'.format(name))
+        ConnectionDB.InsertTelegramConversation(chat_id, name, username)
+        cacheUsers.append(chat_id)
+        update.message.reply_text('Thanks {} ({}). You are saved!'.format(name, username))
+
+
+def unset(bot, update, chat_data):
+    chat_id = update.message.chat_id
+    username = update.message.from_user.name
+    name = update.message.from_user.full_name
+    ativo = Classes.InList(cacheUsers, chat_id)
+    if ativo:
+        ConnectionDB.InativarTelegramConversation(chat_id)
+        cacheUsers.remove(chat_id)
+        update.message.reply_text('Hi {}! You exited and will not receive more links...'.format(name))
+    else:
+        update.message.reply_text('Hi {}! You already exited and are not in list to receive new posts.'.format(name))
+    
+    update.message.reply_text('Whenever you want, send /start to come back...')
 
 
 def msghelp(bot, update):
     update.message.reply_text('Dá um start aí e espera')
 
-def stop(bot, update):
-    update.message.reply_text('Ok, no more msgs')
-
 
 def LetsGo(bot, job):
     try:
-        logger.info('Let\'s Go rodando...')
-        if os.path.exists(fileTxt):
-            with open(fileTxt, 'r') as txt:
-                for line in txt.readlines():
-                    bot.send_message(line, text='Link às '+ GetTime())
-        else:
-            logger.info('Arquivo {} não existe'.format(fileTxt))
+        logger.info('Let\'s Go rodando para {} users...'.format(len(cacheUsers)))
+        for user in cacheUsers:
+            bot.send_message(user['id'], 
+                            text='*Link* _às_ [link]({}) `{}`'.format('http://google.com', GetTime()),
+                            parse_mode=telegram.ParseMode.MARKDOWN)
 
     except Exception as e:
         logger.warning('LetsGo caused error {}'.format(str(e)))
-
-def alarm(bot, job):
-    """Send the alarm message."""
-    bot.send_message(job.context, text='Beep!')
-
-
-def set_timer(bot, update, args, job_queue, chat_data):
-    """Add a job to the queue."""
-    chat_id = update.message.chat_id
-    try:
-        # args[0] should contain the time for the timer in seconds
-        due = int(args[0])
-        if due < 0:
-            update.message.reply_text('Sorry we can not go back to future!')
-            return
-
-        # Add job to queue
-        job = job_queue.run_repeating(alarm, due, context=chat_id)
-        job.interval = due
-        job.repeat = True
-        chat_data['job'] = job
-
-        update.message.reply_text('Timer successfully set!')
-
-    except (IndexError, ValueError):
-        update.message.reply_text('Usage: /set <seconds>')
-
-
-
-
-def unset(bot, update, chat_data):
-    """Remove the job if the user changed their mind."""
-    if 'job' not in chat_data:
-        update.message.reply_text('You have no active timer')
-        return
-
-    job = chat_data['job']
-    job.schedule_removal()
-    del chat_data['job']
-
-    update.message.reply_text('Timer successfully unset!')
 
 
 def error(bot, update, error):
@@ -98,49 +74,51 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
-def main():
-    """Run bot."""
-    token = GetTelegramToken()
-    logger.info('Bot Iniciando...')
+def send_message(msg):
+    try:
+        logger.info('Send message rodando para {} users...'.format(len(cacheUsers)))
+        logger.info('Msg para enviar: {}'.format(msg))
+        for user in cacheUsers:
+            dp.bot.send_message(user['id'], text=msg, parse_mode=telegram.ParseMode.MARKDOWN)
 
-    updater = Updater(token)
+    except Exception as e:
+        logger.warning('LetsGo caused error {}'.format(str(e)))
 
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+token = GetTelegramToken()
+logger.info('Bot Iniciando...')
 
-    # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
-                                
-    dp.add_handler(CommandHandler("help", msghelp))
-    #dp.add_handler(CommandHandler("set", set_timer,
-    #                              pass_args=True,
-    #                              pass_job_queue=True,
-    #                              pass_chat_data=True))
-    dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
+updater = Updater(token)
 
-    # log all errors
-    dp.add_error_handler(error)
- 
-    # Start the Bot
-    updater.start_polling()
+# Get the dispatcher to register handlers
+dp = updater.dispatcher
 
+# on different commands - answer in Telegram
+dp.add_handler(CommandHandler("start", start, pass_chat_data=True))
+                            
+dp.add_handler(CommandHandler("help", msghelp))
+#dp.add_handler(CommandHandler("set", set_timer,
+#                              pass_args=True,
+#                              pass_job_queue=True,
+#                              pass_chat_data=True))
+dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
+#dp.add_handler(CommandHandler("stop", stop, pass_chat_data=True))
 
-    dp.bot.send_message(65045026, text='Bot iniciado :)\t {}!'.format(GetTime()))
-    
-    due = 30
-    job = dp.job_queue.run_repeating(LetsGo, due)
-    job.interval = due
-    job.repeat = True
-    dp.chat_data['job'] = job
+# log all errors
+dp.add_error_handler(error)
 
+# Start the Bot
+updater.start_polling()
 
-    # Block until you press Ctrl-C or the process receives SIGINT, SIGTERM or
-    # SIGABRT. This should be used most of the time, since start_polling() is
-    # non-blocking and will stop the bot gracefully.
-    updater.idle()
+dp.bot.send_message(65045026, text='Bot iniciado com {} usuarios e {} em cache\t😁\t {}!'.format(ConnectionDB.QtTelegramUsers(), len(cacheUsers), GetTime()))
 
-
+# due = 30
+# job = dp.job_queue.run_repeating(LetsGo, due)
+# job.interval = due
+# job.repeat = True
+# dp.chat_data['job'] = job
 
 
-if __name__ == '__main__':
-    main()
+# Block until you press Ctrl-C or the process receives SIGINT, SIGTERM or
+# SIGABRT. This should be used most of the time, since start_polling() is
+# non-blocking and will stop the bot gracefully.
+updater.idle()
