@@ -49,13 +49,6 @@ def GetCocaTech(link, soup, nivel):
         json = linkObj.toJSON()
         links.append(json)
 
-    for a in body.find_all('a'):
-        linkObj = LinkObj('Coca Tech', soup.title.text, link, a, TipoLink.News)
-        json = linkObj.toJSON()
-        links.append(json)
-
-        #Escrever('{} --> {}'.format(a.text, a['href']), nivel)
-
     for app in body.find_all('div', class_='wpappbox'):
         # divIcon = app.find('div', class_='appicon')
         # icon = divIcon.find('img')
@@ -84,6 +77,16 @@ def GetCocaTech(link, soup, nivel):
 
         links.append(LinkObj('Coca Tech', soup.title.text, link, app, store).toJSON())
 
+
+    linksEpisodio = body.findAll('p', text = 'Links do Episódio:')
+    for linkEp in linksEpisodio:
+        for a in linkEp.find_all('a'):
+            linkObj = LinkObj('Coca Tech', soup.title.text, link, a, TipoLink.News)
+            json = linkObj.toJSON()
+            links.append(json)
+
+            #Escrever('{} --> {}'.format(a.text, a['href']), nivel)
+
     return links
 
 
@@ -104,7 +107,7 @@ def Crawler(fonteTitulo, postItem, nivel):
     # Escrever('Crawler da fonte {}'.format(fonteTitulo), nivel)
     
     if 'CocaTech' in fonteTitulo:
-        response = GetPage(postItem.link, nivel+1)
+        response = GetPage(postItem.link, nivel)
         if response is not None:
             Escrever('Link da página: {}'.format(response.url), nivel)
             linkAjustado = response.url.split('?', 1)[0]            

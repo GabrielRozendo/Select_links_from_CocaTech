@@ -79,6 +79,7 @@ class LinkObj(object):
         dumps = json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
         return json.loads(dumps)
 
+
 def DateTimeDiff(s1, s2):
     tdelta = s2 - s1
     tempoGasto = ''

@@ -1,9 +1,10 @@
 import json
+
 import pymongo
+
+from AppConfig import GetConnectionURI
 from Classes import GetDate
 from LogObj import Escrever, EscreverLog, EscreverTela
-from AppConfig import GetConnectionURI
-
 
 connection = GetConnectionURI()
 
@@ -12,7 +13,16 @@ client = pymongo.MongoClient(uri)
 db = client.SelectLinks
 
 
-# region Posts
+def InsertLog(logObj):
+    try:
+        db.Logs.insert_one(logObj)
+        EscreverTela('Log salvo com sucesso!')
+
+    except Exception as e:
+        Escrever('Exceção no InsertLog: {}'.format(str(e)))
+
+
+#region Posts
 def InsertPost_(Post):
     try:
         db.Posts.insert_one(
@@ -115,9 +125,9 @@ def DropPosts():
         Escrever('Sucesso no drop! Conferindo quantidade: {}'.format(QtPosts()))
     except Exception as e:
         Escrever('Exceção no drop: {}'.format(str(e)))
-# endregion
+#endregion
 
-# region Links
+#region Links
 
 def InsertLink_(linkObj):
     try:
@@ -165,29 +175,15 @@ def DropLinks():
         Escrever('Sucesso no drop! Conferindo quantidade: {}'.format(QtLinks()))
     except Exception as e:
         Escrever('Exceção no drop: {}'.format(str(e)))
-# endregion
-
-
-def InsertLog(logObj):
-    try:
-        db.Logs.insert_one(logObj)
-        EscreverTela('Log salvo com sucesso!')
-
-    except Exception as e:
-        Escrever('Exceção no InsertLog: {}'.format(str(e)))
+#endregion
 
 #region Telegram
 
-def InsertTelegramConversation(id, name, username):
+def InsertTelegramConversation(nome, user, id):
     try:
-        db.TelegramBot.insert_one({
-                "username": username, 
-                "nome": name,
-                "id": id,
-                "status": 1,
-                "criadoEm": GetDate()
-            })
-        Escrever('TelegramBotObj {} - {} salvo com sucesso!'.format(name, str(id)))
+        db.TelegramBot.insert_one({"nome": nome, "user": user, "id": id, "status": 1, "criadoEm": GetDate()})
+
+        Escrever('ID Telegram salvo com sucesso: {} ({}) - {}!'.format(nome, user, id))
     except Exception as e:
         Escrever('Exceção no InsertTelegramConversation: {}'.format(str(e)))
 
