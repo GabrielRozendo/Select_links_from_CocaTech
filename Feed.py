@@ -3,7 +3,7 @@ import ConnectionDB
 from Classes import PostFeed
 from Crawler import Crawler
 from LogObj import (Alterado, Erro, Escrever, EscreverLog, EscreverTela, EscreverTelaMesmaLinha, FinalizarLog, Inicio, Sucesso)
-
+import TelegramBotMsg
 
 def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
     try:
@@ -28,7 +28,8 @@ def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
             else:
                 pubDate = None
 
-            postItem = PostFeed(postItem.title, tags, postItem.link, pubDate, titulo)
+            EnviarViaTelegramBot(titulo, postItem.title, links)
+            postItem = PostFeed(postItem.title, tags, postItem.link, pubDate, titulo)            
             lstPosts.append(postItem.toJSON())
             return True
         else:
@@ -40,8 +41,16 @@ def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
         return False
 
 
-try:
+def EnviarViaTelegramBot(titulo, postItemTitle, links):
+    qt = len(links)
+    i = 0
+    plural = 's' if qt > 1 else ''
+    TelegramBotMsg.send_message('{3} novo{0} link{0} encontrado{0} em {1} -- {2}.'.format(plural, titulo, postItemTitle, qt))
+    for link in links:
+        i+=1
+        TelegramBotMsg.send_message('{}\t{} de {}\t{}\n{} -- {}'.format(postItemTitle, i, qt, link['tipo'], link['link'], link['texto']))
 
+try:
     # ConnectionDB.DropPosts()
     # ConnectionDB.DropLinks()
     EscreverTela('Qt de posts existentes: {}'.format(ConnectionDB.QtPosts()))
@@ -68,15 +77,14 @@ try:
             Escrever('Resultado do parse: {}'.format(rss.status), nivel)
             rssTitle = rss.feed.title
             if 'updated' in rss:
-                updated = rss.update
+                updated = rss.updated
             elif 'updated' in rss.feed:
-                updated = rss.feed.update
+                updated = rss.feed.updated
             elif 'published' in rss.feed:
                 updated = rss.feed.published
 
             qtEntries = len(rss.entries)
-            Escrever('Feed {} atualizado em {} e possui {} itens...'.format(
-                rssTitle, updated, qtEntries), nivel)
+            Escrever('Feed {} atualizado em {} e possui {} itens...'.format(rssTitle, updated, qtEntries), nivel)
 
             i = 0
             for postItem in rss.entries:

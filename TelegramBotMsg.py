@@ -9,25 +9,32 @@ import os.path
 
 from telegram.ext import CommandHandler, Updater
 
+import ConnectionDB
 from AppConfig import GetTelegramToken, GetValue
 from Classes import GetTime
 
 # Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
-                    level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-fileTxt = GetValue('Telegram','IDConversationFile')
+dispatcher = None
+destinatarios = []
 
+
+def send_message(msg):
+    if not destinatarios:
+        iniciarbot()
+    for destinatario in destinatarios:
+        telegramBot.send_message(destinatario['id'], text=msg)
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 def start(bot, update):
     chat_id = update.message.chat_id
     update.message.reply_text('Hi! You will receive the links as soon they catched here')
-    with open(fileTxt,'a+') as myFile:
-        myFile.write(str(chat_id)+'\n')
+    
+    ConnectionDB.InsertTelegramConversation('nome', 'user', chat_id)
     update.message.reply_text('ID: {} saved!'.format(chat_id))
 
 
@@ -41,12 +48,8 @@ def stop(bot, update):
 def LetsGo(bot, job):
     try:
         logger.info('Let\'s Go rodando...')
-        if os.path.exists(fileTxt):
-            with open(fileTxt, 'r') as txt:
-                for line in txt.readlines():
-                    bot.send_message(line, text='Link às '+ GetTime())
-        else:
-            logger.info('Arquivo {} não existe'.format(fileTxt))
+        for destinatario in destinatarios:
+            bot.send_message(destinatario, text='Link às '+ GetTime())
 
     except Exception as e:
         logger.warning('LetsGo caused error {}'.format(str(e)))
@@ -98,14 +101,24 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
+def iniciarbot():
+    token = GetTelegramToken()
+    logger.info('Carregando Bot...')
+
+    global telegramBot
+    telegramBot = Updater(token).dispatcher.bot
+    
+    global destinatarios
+    destinatarios = ConnectionDB.ReadAllTelegramConversation()
+    logger.info('{} destinatarios'.format(len(destinatarios)))
+
 def main():
     """Run bot."""
+
     token = GetTelegramToken()
     logger.info('Bot Iniciando...')
 
     updater = Updater(token)
-
-    # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
@@ -121,26 +134,22 @@ def main():
     # log all errors
     dp.add_error_handler(error)
  
+
     # Start the Bot
     updater.start_polling()
-
-
-    dp.bot.send_message(65045026, text='Bot iniciado :)\t {}!'.format(GetTime()))
+    updater.bot.send_message(65045026, text='Bot iniciado :)\t {}!'.format(GetTime()))
     
     due = 30
-    job = dp.job_queue.run_repeating(LetsGo, due)
+    job = updater.job_queue.run_repeating(LetsGo, due)
     job.interval = due
     job.repeat = True
-    dp.chat_data['job'] = job
+    updater.chat_data['job'] = job
 
 
     # Block until you press Ctrl-C or the process receives SIGINT, SIGTERM or
     # SIGABRT. This should be used most of the time, since start_polling() is
     # non-blocking and will stop the bot gracefully.
     updater.idle()
-
-
-
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,6 @@
-feedparser==5.2.1
 pymongo==3.6.1
+feedparser==5.2.1
 requests==2.18.4
+python_telegram_bot==10.0.1
 beautifulsoup4==4.6.0
+telegram==0.0.1
