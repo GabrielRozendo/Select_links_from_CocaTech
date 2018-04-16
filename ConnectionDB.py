@@ -213,3 +213,5 @@ def ReadAllTelegramUsers():
 
 def QtTelegramUsers():
     return db.TelegramBot.count()
+
+#endregion
