@@ -54,6 +54,8 @@ def unset(bot, update, chat_data):
 
 def send_message(msg):
     try:
+        if dispatcher is None:
+            iniciarbot()
         logger.info('Send message rodando para {} users...'.format(len(cachedUsers)))
         logger.info('Msg para enviar: {}'.format(msg))
         for user in cachedUsers:
@@ -89,12 +91,13 @@ def iniciarbot():
     token = GetTelegramToken()
     logger.info('Carregando Bot...')
 
-    global telegramBot
-    telegramBot = Updater(token).dispatcher.bot
-    
-    global destinatarios
-    destinatarios = ConnectionDB.ReadAllTelegramUsers()
-    logger.info('{} destinatarios'.format(len(destinatarios)))
+    global dispatcher
+    dispatcher = Updater(token).dispatcher
+
+    global cachedUsers
+    if cachedUsers is None:    
+        cachedUsers = ConnectionDB.ReadAllTelegramUsers()
+    logger.info('{} destinatários'.format(len(cachedUsers)))
 
 
 def main():
