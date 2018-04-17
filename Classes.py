@@ -5,7 +5,7 @@ from enum import Enum
 
 
 def GetDate():
-    return str(datetime.now())
+    return str(datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
 
 def GetTime():
     return str(datetime.now().strftime('%H:%M:%S'))
