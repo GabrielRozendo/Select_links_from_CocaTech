@@ -25,9 +25,9 @@ def EscreverLog(texto):
     logObj.msgs.append(msg)
 
 def EscreverTela(texto, data = True, linhanova = True):
-    s = ''
+    s = '\r'
     if data:
-        s = '{}\t'.format(GetDate())
+        s += '{}\t'.format(GetDate())
     s += texto
 
     global qtChars    # Needed to modify global copy of globvar
@@ -41,7 +41,7 @@ def ApagarLinhaTela(n):
 
 
 def EscreverTelaMesmaLinha(texto):    
-    ApagarLinhaTela(99)
+    # ApagarLinhaTela(99)
     EscreverTela(texto, True, False)
 
 

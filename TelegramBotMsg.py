@@ -62,7 +62,7 @@ def send_message(msg):
             dispatcher.bot.send_message(user['id'], text=msg, parse_mode=telegram.ParseMode.MARKDOWN)
 
     except Exception as e:
-        logger.warning('LetsGo caused error {}'.format(str(e)))
+        logger.warning('Send Message caused error {}'.format(str(e)))
 
 
 def msghelp(bot, update):

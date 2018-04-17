@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 import requests
@@ -9,7 +10,7 @@ from LogObj import Erro, Escrever
 
 
 def GetPage(link, nivel):
-    Escrever('Get Page: {}'.format(link))
+    Escrever('Get Page: {}'.format(link), nivel)
     response = requests.get(link)
     Escrever('Código do status de resultado: {}. Ok: {}'.format(response.status_code, response.ok), nivel)
     if response.ok:
@@ -19,21 +20,25 @@ def GetPage(link, nivel):
         return None
 
 
-def GetHref(a):
+def GetHref(a, texto=None):
     if 'href' in a.attrs:
-        return a['href']
+        href = a['href']
     else:
-        return a
+        href = a
+
+    if texto is None:
+        texto = a.text.strip()
+    return '<a href=\'{}\'>{}</a>'.format(href, texto)
 
 
-def TratarTipoLink(a):
-    if InListAnyInS(['App Store', 'AppStore'], a.text):
+def TratarTipoLink(text):
+    if InListAnyInS(['App Store', 'AppStore'], text):
         return TipoLink.AppStore
-    elif InListAnyInS(['KickStarter', 'Indiegogo', 'Rockethub', 'GoFundme', 'Crowdrise', 'Kickante', 'startmeup', 'impulso', 'idea.me', 'catarse', 'vaquinha'], a.text):
+    elif InListAnyInS(['KickStarter', 'Indiegogo', 'Rockethub', 'GoFundme', 'Crowdrise', 'Kickante', 'startmeup', 'impulso', 'idea.me', 'catarse', 'vaquinha'], text):
         return TipoLink.Crowdfunding
-    elif InListAnyInS(['GooglePlay', 'Google Play', 'Play Store'], a.text):
+    elif InListAnyInS(['GooglePlay', 'Google Play', 'Play Store'], text):
         return TipoLink.PlayStore
-    elif InListAnyInS(['Youtube', 'Vimeo'], a.text):
+    elif InListAnyInS(['Youtube', 'Vimeo'], text):
         return TipoLink.Video
     else: 
         return TipoLink.News
@@ -68,24 +73,28 @@ def GetCocaTech(link, soup, nivel):
             store = TipoLink.Mac
         elif 'appstore' in app.attrs['class']:
             store = TipoLink.AppStore
+        elif 'googleplay' in app.attrs['class']:
+            store = TipoLink.PlayStore 
         else:
             store = TipoLink.Desconhecido
 
         #Escrever('App {} || by {}, {}'.format(title, developerName, price), nivel)
         #Escrever('Link ({}): {}'.format(store, link), nivel)
         #Escrever('----------------------------', nivel)
+        appLink = app.a['href']
+        appText = app.text.strip().strip('<br/>').strip('Download').strip().strip('QR-Code').strip()
+        appLink = '<a href=\'{}\'>{}<\a>'.format(appLink, appText)
+        links.append(LinkObj('Coca Tech', soup.title.text, link, appLink, store).toJSON())
 
-        links.append(LinkObj('Coca Tech', soup.title.text, link, app, store).toJSON())
-
-
-    linksEpisodio = body.findAll('p', text = 'Links do Episódio:')
+    linksEpisodio = body.findAll('p')
     for linkEp in linksEpisodio:
-        for a in linkEp.find_all('a'):
-            linkObj = LinkObj('Coca Tech', soup.title.text, link, a, TipoLink.News)
-            json = linkObj.toJSON()
-            links.append(json)
+        if 'Links do Episódio:' in linkEp.text:
+            for a in linkEp.findAll('a'):
+                linkObj = LinkObj('Coca Tech', soup.title.text, link, GetHref(a), TipoLink.News)
+                json = linkObj.toJSON()
+                links.append(json)
 
-            #Escrever('{} --> {}'.format(a.text, a['href']), nivel)
+                #Escrever('{} --> {}'.format(a.text, a['href']), nivel)
 
     return links
 
@@ -94,9 +103,11 @@ def LinksDefault(fonte, postUrl, soup, nivel):
     links = []
     for a in soup.find_all('a'):
         texto = a.parent.text
+        if 'Site do Loop Matinal' in texto:
+            break
         #texto = a.text
-        link = GetHref(a)
-        tipoLink = TratarTipoLink(a)
+        link = GetHref(a, texto)
+        tipoLink = TratarTipoLink(texto)
         links.append(LinkObj(fonte, texto, postUrl, link, tipoLink).toJSON())
         # Escrever('{} --> {}'.format(a.text, GetHref(a)), nivel)
 
@@ -109,7 +120,7 @@ def Crawler(fonteTitulo, postItem, nivel):
     if 'CocaTech' in fonteTitulo:
         response = GetPage(postItem.link, nivel)
         if response is not None:
-            Escrever('Link da página: {}'.format(response.url), nivel)
+            # Escrever('Link da página: {}'.format(response.url), nivel)
             linkAjustado = response.url.split('?', 1)[0]            
             Escrever('Link Ajustado: {}'.format(linkAjustado), nivel)
 

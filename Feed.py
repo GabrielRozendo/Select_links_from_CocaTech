@@ -1,9 +1,12 @@
 import feedparser
+from bs4 import BeautifulSoup
+
 import ConnectionDB
+import TelegramBotMsg
 from Classes import PostFeed
 from Crawler import Crawler
 from LogObj import (Alterado, Erro, Escrever, EscreverLog, EscreverTela, EscreverTelaMesmaLinha, FinalizarLog, Inicio, Sucesso)
-import TelegramBotMsg
+
 
 def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
     try:
@@ -28,7 +31,7 @@ def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
             else:
                 pubDate = None
 
-            EnviarViaTelegramBot(titulo, postItem.title, links)
+            EnviarViaTelegramBot(titulo, postItem.link, postItem.title, links)
             postItem = PostFeed(postItem.title, tags, postItem.link, pubDate, titulo)            
             lstPosts.append(postItem.toJSON())
             return True
@@ -41,14 +44,29 @@ def NovoPostEncontrado(titulo, postItem, lstPosts, lstLinks, nivel):
         return False
 
 
-def EnviarViaTelegramBot(titulo, postItemTitle, links):
+def EnviarViaTelegramBot(titulo, postItemLink, postItemTitle, links):
     qt = len(links)
     i = 0
     plural = 's' if qt > 1 else ''
-    TelegramBotMsg.send_message('{3} novo{0} link{0} encontrado{0} em {1} -- {2}.'.format(plural, titulo, postItemTitle, qt))
+    # TelegramBotMsg.send_message('*{3}* novo{0} link{0} encontrado{0} em *{1}* -- _{2}_.'.format(plural, titulo, postItemTitle, qt))
     for link in links:
         i+=1
-        TelegramBotMsg.send_message('{}\t{} de {}\t{}\n{} -- {}'.format(postItemTitle, i, qt, link['tipo'], link['link'], link['texto']))
+        soup = BeautifulSoup(link['link'], 'html.parser')
+        href = soup.a['href']
+        text = soup.text
+        
+        indice = '_{} de {}_\n'.format(i, qt) if qt > 1 else ''
+
+        msg =  'Novo{0} link{0} de *{1}*\n'.format(plural, titulo)
+        msg += '{}\n'.format(postItemTitle)
+        msg += indice
+        msg += '\n`{}`\n'.format(link['tipo'])
+        if not href in text:
+            msg += '{} -> '.format(href)
+        msg += '{}\n\n\n'.format(text)
+        msg += '[link do post]({})'.format(postItemLink.split('?', 1)[0])
+
+        TelegramBotMsg.send_message(msg)
 
 try:
     # ConnectionDB.DropPosts()
@@ -90,8 +108,10 @@ try:
             for postItem in rss.entries:
                 i += 1
                 EscreverTelaMesmaLinha('{} de {}\t'.format(i, qtEntries))
-                if not ConnectionDB.PostExists(postItem.link):
-                    EscreverTela('', False, False)
+                if ConnectionDB.PostExists(postItem.link):
+                    EscreverTela(' '*99, False, False)
+                else:
+                    EscreverTela('', False, True)
                     if NovoPostEncontrado(rssTitle, postItem, lstPosts, lstLinks, nivel):
                         novoPostNesseFeed = True
 
@@ -106,7 +126,7 @@ try:
 
         finally:
             nivel = 0
-            Escrever('------------', nivel)
+            Escrever('-'*30, nivel)
 
     if lstLinks: # not lstLinks:
         ConnectionDB.InsertLinkMany(lstLinks)

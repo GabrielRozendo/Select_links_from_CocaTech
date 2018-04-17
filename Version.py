@@ -4,7 +4,25 @@ import time
 import ConnectionDB
 from LogObj import EscreverTela, EscreverTelaMesmaLinha
 from datetime import datetime
+import TelegramBotMsg
+import time
 
+
+for x in range (0,5):  
+    b = "Loading" + "." * x
+    print (b, sep=' ', end='', flush=True)
+    time.sleep(1)
+
+for i in range(0, 3):
+    # EscreverTela('\r'*99, False, False)
+    EscreverTelaMesmaLinha('{} de {}\t'.format(i+1, 3))
+
+EscreverTela('', False, True)
+
+
+TelegramBotMsg.send_message('tab\t~~funciona?~~ e\\agora   ?\n')
+
+TelegramBotMsg.send_message('[16/04 – iPhone X Gold, Vazamentos, Bate-Papo com Livros e muito mais](http://feeds.cocatech.com.br/~r/cocatechpodcast/~3/pHOGQEwKHSo/16-de-abril-de-2018)')
 
 print(sys.version)
 
