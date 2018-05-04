@@ -30,13 +30,13 @@ Isso tudo além de conseguir o objetivo de ter os links divulgados mesmo antes d
 
 2: ler a página e pegar os links ⚠️
 
-3: criar o cosmos db ✅
+3: criar o cosmos db ✅ --> Alterar para utilizar SQL, pois está muito caro!
 
 4: salvar esses dados no azure ✅
 
 5: exibir via angular ❌
 
-6: enviar via bot do Telegram ❌
+6: enviar via bot do Telegram ✅
 
 ## Author
 
